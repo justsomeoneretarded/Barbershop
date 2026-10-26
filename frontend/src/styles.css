@@ -1,6 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.icon-button.mobile-locate {
+  display: none;
+}
+@media (max-width: 850px) {
+  .icon-button.mobile-locate {
+    display: inline-flex;
+  }
+}
 .owner-shop-filter {
   max-width: 300px;
   margin-bottom: 22px;

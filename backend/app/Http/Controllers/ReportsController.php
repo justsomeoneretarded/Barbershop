@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\ClientNote;
+use App\Models\Payment;
 use App\Models\User;
 use App\Support\Access;
 use Illuminate\Http\Request;
@@ -73,6 +74,6 @@ class ReportsController extends Controller
             'cancelled_value' => round($bookings->whereIn('status', ['cancelled', 'rejected', 'expired'])->sum('total_price'), 2), 'daily' => $daily,
             'barbers' => $done->groupBy('barber_id')->map(fn ($x) => ['name' => $x->first()->barber->user->full_name, 'visits' => $x->count(), 'revenue' => round($x->sum('total_price'), 2)])->values(),
             'services' => $done->flatMap->items->groupBy('service_id')->map(fn ($x) => ['name' => $x->first()->service_name, 'count' => $x->count(), 'revenue' => round($x->sum('price'), 2)])->sortByDesc('count')->values(),
-            'refund_queue' => $payments->where('status', 'refund_pending')->values()];
+            'refund_queue' => Payment::where('status', 'refund_pending')->whereIn('booking_id', $this->bookings($r)->select('id'))->oldest()->get()];
     }
 }

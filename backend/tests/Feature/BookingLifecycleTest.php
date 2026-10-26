@@ -277,6 +277,16 @@ class BookingLifecycleTest extends TestCase
         $this->assertSame(1, $profile->services()->count());
     }
 
+    public function test_refund_work_list_is_not_hidden_by_report_date_filters(): void
+    {
+        $b = $this->hold();
+        $this->submit($b)->assertOk();
+        Sanctum::actingAs($this->barberUser);
+        $this->postJson('/api/bookings/'.$b->id.'/decision', ['decision' => 'reject', 'reason' => 'Unavailable'])->assertOk();
+        Sanctum::actingAs($this->owner);
+        $this->getJson('/api/reports/revenue?from=2026-12-01&to=2026-12-31')->assertOk()->assertJsonPath('gross_revenue', 0)->assertJsonPath('refund_queue.0.booking_id', $b->id);
+    }
+
     public function test_cash_completion_records_balance_once(): void
     {
         $b = $this->hold();
@@ -287,6 +297,6 @@ class BookingLifecycleTest extends TestCase
         $this->postJson('/api/bookings/'.$b->id.'/complete')->assertOk()->assertJsonPath('status', 'completed');
         $this->postJson('/api/bookings/'.$b->id.'/complete')->assertStatus(409);
         $this->assertSame(1, $b->payments()->where('type', 'balance')->count());
-        $this->getJson('/api/reports/revenue?from=2026-11-01&to=2026-11-30')->assertOk()->assertJsonPath('gross_revenue',350.01)->assertJsonPath('balances_due',0);
+        $this->getJson('/api/reports/revenue?from=2026-11-01&to=2026-11-30')->assertOk()->assertJsonPath('gross_revenue', 350.01)->assertJsonPath('balances_due', 0);
     }
 }

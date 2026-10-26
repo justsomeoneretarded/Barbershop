@@ -1,4 +1,13 @@
 services:
+  web:
+    image: node:22-bookworm-slim
+    user: "1000:1000"
+    working_dir: /app
+    volumes: [./frontend:/app]
+    ports: ["5173:5173"]
+    environment: {API_PROXY_TARGET: "http://api:8000"}
+    command: ["npm", "run", "dev"]
+    depends_on: [api]
   postgres:
     image: postgres:16-alpine
     environment:

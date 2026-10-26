@@ -23,6 +23,8 @@ npm run dev
 
 Open http://localhost:5173. API: http://localhost:8000/api. Vite proxies API requests and public uploads to Laravel. The image build uses a CA bundle secret for HTTPS package installation; Compose defaults to the system certificate bundle. In managed environments it respects CODEX_PROXY_CERT.
 
+Alternatively, after npm ci in frontend, run docker compose up -d web from the repository root to keep the preview server in Docker. Its API proxy target is configured automatically; do not run both preview servers on port 5173.
+
 The seeder is for an empty development database only. Do not seed production. It creates fictional shops, people, and payment records. The bank account numbers are placeholders. Never send money to sample accounts.
 
 | Portal | Email | Password |
@@ -56,6 +58,8 @@ New customers and owners can register. Barbers join through owner-generated invi
 8. Minimum advance notice is 135 minutes, allowing the full 10-minute payment hold and 120-minute approval window before the appointment. Schedules are same-day shifts with a single optional break, matching the supplied schema. Public bank details are only returned to authorized users during checkout.
 
 The scheduler executes bookings:reconcile every minute and prunes expired Sanctum tokens daily. Reconciliation is safe to repeat and also runs before availability queries. Keep one scheduler running and monitor queue/scheduler health. The refund queue is a database-backed work list for owners; it does not transfer funds automatically.
+
+The refund work list includes all pending refunds within the authorized shop scope, independent of the chart date range, so an older or future appointment cannot hide a refund obligation.
 
 ## Tests
 

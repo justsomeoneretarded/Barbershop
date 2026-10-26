@@ -156,6 +156,13 @@ export default function Discovery() {
             </button>
           ))}
         </div>
+        <button
+          className="icon-button mobile-locate"
+          title="Use my current location"
+          onClick={locate}
+        >
+          <Navigation size={17} />
+        </button>
         <label className="radius">
           <SlidersHorizontal size={16} />
           <select
@@ -250,11 +257,13 @@ export default function Discovery() {
                     <div>
                       <span className="muted tiny">Services from</span>
                       <strong>
-                        {money(
-                          Math.min(
-                            ...shop.services.map((s) => Number(s.price)),
-                          ),
-                        )}
+                        {shop.services.length
+                          ? money(
+                              Math.min(
+                                ...shop.services.map((s) => Number(s.price)),
+                              ),
+                            )
+                          : "Not listed"}
                       </strong>
                     </div>
                     <Link className="book-link" to={"/shops/" + shop.id}>
