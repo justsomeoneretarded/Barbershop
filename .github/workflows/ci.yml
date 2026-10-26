@@ -1,0 +1,65 @@
+name: Verify Marketplace
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: chair
+          POSTGRES_PASSWORD: chair_local
+          POSTGRES_DB: chair_test
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U chair" --health-interval 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+    env:
+      DB_HOST: 127.0.0.1
+      REDIS_HOST: 127.0.0.1
+      BCRYPT_ROUNDS: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_pgsql, mbstring, bcmath, dom, xml
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: cp backend/.env.example backend/.env
+      - run: composer install --no-interaction --prefer-dist
+        working-directory: backend
+      - run: php artisan key:generate
+        working-directory: backend
+      - run: php artisan test
+        working-directory: backend
+      - run: PGPASSWORD=chair_local psql -h 127.0.0.1 -U chair -d chair_test -c 'CREATE DATABASE chair'
+      - run: php artisan migrate --seed --force
+        working-directory: backend
+      - run: php artisan storage:link
+        working-directory: backend
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: |
+          php backend/artisan serve --host=0.0.0.0 --port=8000 > /tmp/chair-api.log 2>&1 &
+          npm --prefix frontend run dev > /tmp/chair-vite.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://localhost:5173/ > /dev/null; then break; fi
+            sleep 1
+          done
+      - run: npm test
+        working-directory: frontend
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-results
+          path: frontend/test-results

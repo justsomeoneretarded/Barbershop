@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: chair
+      POSTGRES_USER: chair
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-chair_local}
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chair"]
+      interval: 3s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    ports: ["127.0.0.1:6379:6379"]
+  api:
+    image: chair-php
+    user: "1000:1000"
+    build:
+      context: ./backend
+      secrets: [proxy_ca]
+    working_dir: /app
+    volumes: [./backend:/app, ./backend/docker/php.ini:/usr/local/etc/php/conf.d/chair.ini:ro]
+    ports: ["8000:8000"]
+    environment: {DB_HOST: postgres, REDIS_HOST: redis}
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_started}
+  scheduler:
+    image: chair-php
+    user: "1000:1000"
+    working_dir: /app
+    volumes: [./backend:/app]
+    environment: {DB_HOST: postgres, REDIS_HOST: redis}
+    command: ["php", "artisan", "schedule:work"]
+    depends_on: [api]
+  queue:
+    image: chair-php
+    user: "1000:1000"
+    working_dir: /app
+    volumes: [./backend:/app]
+    environment: {DB_HOST: postgres, REDIS_HOST: redis}
+    command: ["php", "artisan", "queue:work", "--tries=3"]
+    depends_on: [api]
+volumes:
+  pgdata:
+secrets:
+  proxy_ca:
+    file: ${CODEX_PROXY_CERT:-/etc/ssl/certs/ca-certificates.crt}
