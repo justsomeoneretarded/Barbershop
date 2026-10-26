@@ -74,6 +74,8 @@ Browser tests require the seeded API and Vite server. They verify mobile/desktop
 
 ## Deployment boundary
 
+The production JavaScript dependency audit also reports two moderate advisories in the explicitly requested React Router v6 dependency tree. Its suggested patched upgrade is React Router v7. This app uses fixed internal navigation targets and no SSR hydration, reducing exposure to the reported paths, but the audit is not clean. Upgrade and re-audit both PHP and JavaScript dependencies before production.
+
 Laravel 11 was explicitly requested and is pinned here, with PHP 8.3 dependency resolution. At implementation time Composer reports security advisories against the latest Laravel 11 release. This version is a production deployment blocker: upgrade to a supported Laravel release and resolve composer audit before accepting real customer data or money. Dependencies were installed locally with the explicit advisory override to implement and test the requested stack; the advisory check has not been disabled in configuration.
 
 Docker Compose and artisan serve are development tooling. For production use PHP-FPM behind an HTTPS reverse proxy and serve frontend/dist as static files, routing SPA paths to index.html and /api to Laravel. Keep the API, Redis, and PostgreSQL on private networks. Use APP_DEBUG=false, a secret APP_KEY, strong database credentials, restrictive CORS, durable public/private storage, backups, TLS, process supervision, and an upload limit matching php.ini. Do not expose private receipts under /storage.
