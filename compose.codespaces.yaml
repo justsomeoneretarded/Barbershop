@@ -1,0 +1,19 @@
+# Codespaces-only override for environments where Docker bridge traffic fails.
+services:
+  api:
+    network_mode: host
+    ports: !reset []
+    environment:
+      DB_HOST: 127.0.0.1
+      REDIS_HOST: 127.0.0.1
+      FRONTEND_URL: https://${CODESPACE_NAME}-5173.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
+  scheduler:
+    network_mode: host
+    environment:
+      DB_HOST: 127.0.0.1
+      REDIS_HOST: 127.0.0.1
+  queue:
+    network_mode: host
+    environment:
+      DB_HOST: 127.0.0.1
+      REDIS_HOST: 127.0.0.1

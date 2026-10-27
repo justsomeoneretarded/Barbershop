@@ -39,6 +39,23 @@ The seeder is for an empty development database only. Do not seed production. It
 
 New customers and owners can register. Barbers join through owner-generated invitation links. Profile settings support customer, barber, and owner photos. An owner creates a shop, its services, then invites staff; invite acceptance creates an initial weekly schedule and assigns active services. Owners can change staff assignments afterward.
 
+## Codespaces networking
+
+If services cannot connect through Docker bridge networking in a Codespace, use the Codespaces-only override after installing dependencies and initializing the database:
+
+```bash
+docker compose -f compose.yaml -f compose.codespaces.yaml up -d api scheduler queue
+```
+
+This uses the host network for the PHP services, connecting to the existing PostgreSQL and Redis loopback ports. It preserves their data volumes and sets invitation URLs to the Codespace preview address. Use the same two Compose files for subsequent backend commands. Run the frontend in the Codespace terminal with its exact preview hostname allowed:
+
+```bash
+cd frontend
+__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS="${CODESPACE_NAME}-5173.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}" npm run dev -- --port 5173 --strictPort
+```
+
+Open port 5173 through the Codespaces Ports panel and keep its visibility private. This override is for Codespaces development only; it is not a production network configuration.
+
 ## Included workflows
 
 - Distance-sorted discovery with a bound-parameter PostgreSQL Haversine query, radius limits, service search, favorites, local photographs, and active barber portraits.
