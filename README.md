@@ -4,6 +4,8 @@ A Laravel 11 API and a separate React/Vite JavaScript SPA for customers, barbers
 
 ## Run locally
 
+The localhost URLs below work on the computer where you run these commands. A server running in a remote coding workspace is not reachable through localhost on your own computer. Use a forwarded workspace port if your workspace provides one, or clone this repository and run it locally.
+
 Requirements: Docker with Compose and Node 22 or newer. No local PHP installation is needed.
 
 ```bash
@@ -24,6 +26,8 @@ npm run dev
 Open http://localhost:5173. API: http://localhost:8000/api. Vite proxies API requests and public uploads to Laravel. The image build uses a CA bundle secret for HTTPS package installation; Compose defaults to the system certificate bundle. In managed environments it respects CODEX_PROXY_CERT.
 
 Alternatively, after npm ci in frontend, run docker compose up -d web from the repository root to keep the preview server in Docker. Its API proxy target is configured automatically; do not run both preview servers on port 5173.
+
+For an already configured checkout, start the entire app with `docker compose up -d` from the repository root, then open http://localhost:5173. Run `docker compose ps` to check the services and `docker compose logs --tail=50 web api` to inspect startup errors. The services use `restart: unless-stopped` to recover when Docker restarts. They cannot serve the app while the host or remote workspace is suspended.
 
 The seeder is for an empty development database only. Do not seed production. It creates fictional shops, people, and payment records. The bank account numbers are placeholders. Never send money to sample accounts.
 
